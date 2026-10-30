@@ -1950,7 +1950,7 @@ export function WasteDashboard() {
       .then(async (response) => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json() as Promise<WasteFilters>; })
       .then((filters) => {
         setMeta(filters);
-        if (filters.availablePeriod.from && filters.availablePeriod.to) setPeriod(latestPeriod(filters.availablePeriod.to, 7, filters.availablePeriod.from));
+        if (filters.availablePeriod.from && filters.availablePeriod.to) setPeriod(latestPeriod(filters.availablePeriod.to, 14, filters.availablePeriod.from));
         else setLoading(false);
       })
       .catch((reason) => { if (reason instanceof Error && reason.name === "AbortError") return; setError("Не удалось загрузить значения фильтров"); setLoading(false); });
