@@ -1,0 +1,180 @@
+{
+ "region": "Москва",
+ "all": {
+  "total": 683,
+  "open": 540,
+  "no_fuel": 109,
+  "closed_other": 34,
+  "index": 79.1
+ },
+ "nets": {
+  "Роснефть": {
+   "total": 157,
+   "open": 147,
+   "no_fuel": 6,
+   "closed_other": 4,
+   "index": 93.6
+  },
+  "Газпромнефть": {
+   "total": 115,
+   "open": 65,
+   "no_fuel": 43,
+   "closed_other": 7,
+   "index": 56.5
+  },
+  "Teboil": {
+   "total": 59,
+   "open": 48,
+   "no_fuel": 10,
+   "closed_other": 1,
+   "index": 81.4
+  },
+  "Лукойл": {
+   "total": 173,
+   "open": 138,
+   "no_fuel": 19,
+   "closed_other": 16,
+   "index": 79.8
+  },
+  "Татнефть": {
+   "total": 43,
+   "open": 37,
+   "no_fuel": 5,
+   "closed_other": 1,
+   "index": 86.0
+  },
+  "Нефтьмагистраль": {
+   "total": 36,
+   "open": 29,
+   "no_fuel": 6,
+   "closed_other": 1,
+   "index": 80.6
+  },
+  "Эверон": {
+   "total": 14,
+   "open": 14,
+   "no_fuel": 0,
+   "closed_other": 0,
+   "index": 100.0
+  },
+  "Трасса": {
+   "total": 7,
+   "open": 6,
+   "no_fuel": 1,
+   "closed_other": 0,
+   "index": 85.7
+  },
+  "ФСВ": {
+   "total": 4,
+   "open": 2,
+   "no_fuel": 2,
+   "closed_other": 0,
+   "index": 50.0
+  },
+  "LPG": {
+   "total": 2,
+   "open": 2,
+   "no_fuel": 0,
+   "closed_other": 0,
+   "index": 100.0
+  },
+  "Радуга": {
+   "total": 4,
+   "open": 3,
+   "no_fuel": 1,
+   "closed_other": 0,
+   "index": 75.0
+  },
+  "NPS": {
+   "total": 2,
+   "open": 2,
+   "no_fuel": 0,
+   "closed_other": 0,
+   "index": 100.0
+  },
+  "Без сети": {
+   "total": 27,
+   "open": 21,
+   "no_fuel": 4,
+   "closed_other": 2,
+   "index": 77.8
+  },
+  "General Fueller": {
+   "total": 6,
+   "open": 3,
+   "no_fuel": 3,
+   "closed_other": 0,
+   "index": 50.0
+  },
+  "Tamic": {
+   "total": 10,
+   "open": 8,
+   "no_fuel": 1,
+   "closed_other": 1,
+   "index": 80.0
+  },
+  "ТрансАЗС": {
+   "total": 5,
+   "open": 2,
+   "no_fuel": 3,
+   "closed_other": 0,
+   "index": 40.0
+  },
+  "VK": {
+   "total": 1,
+   "open": 1,
+   "no_fuel": 0,
+   "closed_other": 0,
+   "index": 100.0
+  },
+  "GetPetrol": {
+   "total": 6,
+   "open": 3,
+   "no_fuel": 3,
+   "closed_other": 0,
+   "index": 50.0
+  },
+  "Shell": {
+   "total": 3,
+   "open": 2,
+   "no_fuel": 1,
+   "closed_other": 0,
+   "index": 66.7
+  },
+  "ОРТК": {
+   "total": 3,
+   "open": 3,
+   "no_fuel": 0,
+   "closed_other": 0,
+   "index": 100.0
+  },
+  "Опти": {
+   "total": 2,
+   "open": 2,
+   "no_fuel": 0,
+   "closed_other": 0,
+   "index": 100.0
+  },
+  "Жигули": {
+   "total": 1,
+   "open": 0,
+   "no_fuel": 1,
+   "closed_other": 0,
+   "index": 0.0
+  },
+  "Asco": {
+   "total": 2,
+   "open": 2,
+   "no_fuel": 0,
+   "closed_other": 0,
+   "index": 100.0
+  },
+  "Газойл": {
+   "total": 1,
+   "open": 0,
+   "no_fuel": 0,
+   "closed_other": 1,
+   "index": 0.0
+  }
+ }
+}

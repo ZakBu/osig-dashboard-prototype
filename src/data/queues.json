@@ -1,0 +1,102 @@
+{
+ "region": "Москва",
+ "totalQueue": 187,
+ "nets": {
+  "Роснефть": {
+   "queue": 93,
+   "total": 157
+  },
+  "Газпромнефть": {
+   "queue": 17,
+   "total": 115
+  },
+  "Teboil": {
+   "queue": 12,
+   "total": 59
+  },
+  "Лукойл": {
+   "queue": 58,
+   "total": 173
+  },
+  "Татнефть": {
+   "queue": 6,
+   "total": 43
+  },
+  "Нефтьмагистраль": {
+   "queue": 1,
+   "total": 36
+  },
+  "Эверон": {
+   "queue": 0,
+   "total": 14
+  },
+  "Трасса": {
+   "queue": 0,
+   "total": 7
+  },
+  "ФСВ": {
+   "queue": 0,
+   "total": 4
+  },
+  "LPG": {
+   "queue": 0,
+   "total": 2
+  },
+  "Радуга": {
+   "queue": 0,
+   "total": 4
+  },
+  "NPS": {
+   "queue": 0,
+   "total": 2
+  },
+  "Без сети": {
+   "queue": 0,
+   "total": 27
+  },
+  "General Fueller": {
+   "queue": 0,
+   "total": 6
+  },
+  "Tamic": {
+   "queue": 0,
+   "total": 10
+  },
+  "ТрансАЗС": {
+   "queue": 0,
+   "total": 5
+  },
+  "VK": {
+   "queue": 0,
+   "total": 1
+  },
+  "GetPetrol": {
+   "queue": 0,
+   "total": 6
+  },
+  "Shell": {
+   "queue": 0,
+   "total": 3
+  },
+  "ОРТК": {
+   "queue": 0,
+   "total": 3
+  },
+  "Опти": {
+   "queue": 0,
+   "total": 2
+  },
+  "Жигули": {
+   "queue": 0,
+   "total": 1
+  },
+  "Asco": {
+   "queue": 0,
+   "total": 2
+  },
+  "Газойл": {
+   "queue": 0,
+   "total": 1
+  }
+ }
+}
