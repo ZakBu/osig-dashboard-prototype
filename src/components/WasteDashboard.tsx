@@ -1,4 +1,5 @@
 "use client";
+import { OperationalOverview } from "./OperationalOverview";
 import { demoFetch as fetch } from "@/lib/demo";
 
 import { Popover } from "@base-ui/react/popover";
@@ -32,7 +33,7 @@ import { GranControl, type Gran } from "./GranControl";
 import { InfoTip } from "./InfoTip";
 import { Dot, Panel } from "./ui";
 
-type View = "summary" | "analytics" | "source";
+type View = "summary" | "structure" | "analytics" | "source";
 type Option = { value: string; label: string; detail?: string };
 
 const EMPTY_SELECTION: WasteSelection = { carriers: [], origins: [], wasteCodes: [] };
@@ -59,7 +60,8 @@ function compactWasteName(value: string) {
 
 function DashboardTabs({ value, onChange }: { value: View; onChange: (value: View) => void }) {
   const tabs = [
-    { value: "summary" as const, label: "Свод", icon: "/waste/tab-summary.svg", width: "w-[164px] lg:w-[205px]", shapePath: "M12 0H193.5C198.16 0 202.51 2.42 204.96 6.39L243.77 64.92C246.51 69.05 248.24 71.1 250 72H0V12C0 5.37 5.37 0 12 0Z" },
+    { value: "summary" as const, label: "Свод", lucide: Gauge, width: "w-[164px] lg:w-[180px]", shapePath: "M12 0H193.5C198.16 0 202.51 2.42 204.96 6.39L243.77 64.92C246.51 69.05 248.24 71.1 250 72H0V12C0 5.37 5.37 0 12 0Z" },
+    { value: "structure" as const, label: "Структура", icon: "/waste/tab-summary.svg", width: "w-[164px] lg:w-[205px]", shapePath: "M12 0H193.5C198.16 0 202.51 2.42 204.96 6.39L243.77 64.92C246.51 69.05 248.24 71.1 250 72H0V12C0 5.37 5.37 0 12 0Z" },
     { value: "analytics" as const, label: "Аналитика", icon: "/waste/tab-analytics.svg", width: "w-[195px] lg:w-[240px]", shapePath: "M56.5 0H193.5C198.16 0 202.51 2.42 204.96 6.39L243.77 64.92C246.51 69.05 248.24 71.1 250 72H0C1.76 71.1 3.49 69.05 6.23 64.92L45.04 6.39C47.49 2.42 51.84 0 56.5 0Z" },
     { value: "source" as const, label: "Данные", lucide: ListChecks, width: "w-[185px] lg:w-[225px]", shapePath: "M56.5 0H193.5C198.16 0 202.51 2.42 204.96 6.39L243.77 64.92C246.51 69.05 248.24 71.1 250 72H0C1.76 71.1 3.49 69.05 6.23 64.92L45.04 6.39C47.49 2.42 51.84 0 56.5 0Z" },
   ];
@@ -2039,11 +2041,11 @@ export function WasteDashboard() {
     <main className="waste-dashboard-root flex min-h-dvh w-full flex-col overflow-x-hidden bg-[#010409] text-[#e8eaf0] lg:h-full lg:min-h-0 lg:overflow-hidden">
       <header className="waste-dashboard-header flex shrink-0 flex-col gap-3 px-3 pt-3 lg:h-[84px] lg:flex-row lg:items-center lg:justify-between lg:gap-4 lg:px-5 lg:pt-0">
         <div className="waste-tabs-scroll -mx-3 overflow-x-auto px-3 lg:mx-0 lg:mt-5 lg:self-start lg:overflow-visible lg:px-0"><DashboardTabs value={view} onChange={setView} /></div>
-        {meta && period ? <FilterBar meta={meta} period={period} selection={selection} onPeriod={setPeriod} onSelection={setSelection} /> : <div className="grid flex-1 grid-cols-2 gap-2 lg:flex lg:justify-end">{[140, 195, 267, 205].map((width) => <Skeleton key={width} className="h-12 rounded-[12px]" style={{ width }} />)}</div>}
+        {meta && period ? <FilterBar meta={meta} period={period} selection={selection} onPeriod={setPeriod} onSelection={setSelection} hidden={view === "summary" ? ["period"] : []} /> : <div className="grid flex-1 grid-cols-2 gap-2 lg:flex lg:justify-end">{[140, 195, 267, 205].map((width) => <Skeleton key={width} className="h-12 rounded-[12px]" style={{ width }} />)}</div>}
       </header>
 
       <section className="waste-dashboard-canvas relative m-3 mt-3 flex min-h-0 flex-1 flex-col rounded-[8px] bg-[#0f1626] p-2.5 lg:mx-5 lg:mb-5 lg:mt-[-1px] lg:rounded-tl-none lg:p-[14px]">
-        {view === "summary" ? (
+        {view === "summary" ? <OperationalOverview selection={selection} /> : view === "structure" ? (
           <div className="waste-summary-grid relative grid min-h-0 flex-1 grid-cols-1 gap-2.5 lg:grid-rows-[minmax(0,510fr)_minmax(0,398fr)] lg:gap-[14px]">
             {showSkeleton || !data ? (
               <>
@@ -2077,8 +2079,8 @@ export function WasteDashboard() {
           </div>
         )}
 
-        {loading && data && <div className="pointer-events-none absolute right-4 top-4 z-30 flex items-center gap-2 rounded-[7px] border border-white/[0.08] bg-[#080d16]/95 px-3 py-2 text-[14px] text-[#9aa4b6]"><Loader2 className="size-3.5 animate-spin" />Обновление</div>}
-        {error && <div className="absolute inset-x-4 top-4 z-40 flex items-center justify-between gap-4 rounded-[8px] border border-[#7d2738] bg-[#251019] px-4 py-3 text-[15px] text-[#f1c4cd]"><span className="flex items-center gap-2"><CircleAlert className="size-4" />{error}</span><button type="button" onClick={refresh} className="flex items-center gap-2 rounded-[6px] bg-white/[0.08] px-3 py-1.5 hover:bg-white/[0.14]"><RefreshCw className="size-3.5" />Повторить</button></div>}
+        {view !== "summary" && loading && data && <div className="pointer-events-none absolute right-4 top-4 z-30 flex items-center gap-2 rounded-[7px] border border-white/[0.08] bg-[#080d16]/95 px-3 py-2 text-[14px] text-[#9aa4b6]"><Loader2 className="size-3.5 animate-spin" />Обновление</div>}
+        {view !== "summary" && error && <div className="absolute inset-x-4 top-4 z-40 flex items-center justify-between gap-4 rounded-[8px] border border-[#7d2738] bg-[#251019] px-4 py-3 text-[15px] text-[#f1c4cd]"><span className="flex items-center gap-2"><CircleAlert className="size-4" />{error}</span><button type="button" onClick={refresh} className="flex items-center gap-2 rounded-[6px] bg-white/[0.08] px-3 py-1.5 hover:bg-white/[0.14]"><RefreshCw className="size-3.5" />Повторить</button></div>}
       </section>
     </main>
   );

@@ -4,14 +4,14 @@ const iso = (time: number) => new Date(time).toISOString().slice(0, 10);
 const availablePeriod = { from: '2026-10-17', to: '2026-10-30' };
 // Fictional names and a fixed seed keep shared demos reproducible.
 const carriers = ['Вектор Транс', 'ЭкоЛогистика', 'Городской поток', 'Ресурс Экспресс', 'Магистраль Эко', 'СеверТранс', 'Контур Рециклинг', 'Чистый маршрут', 'Атлас Карго', 'Новая среда'];
-const origins = ['ЖК «Речной квартал»', 'Реконструкция набережной', 'Метро «Янтарная»', 'Бизнес-парк «Орбита»', 'Развязка Южная', 'ЖК «Сосновый берег»', 'Школа в Новом районе', 'Демонтаж цеха № 4', 'Спорткомплекс «Волна»', 'Трамвайное депо', 'Парк «Зелёный мыс»', 'Технопарк «Спектр»'];
-const receptions = ['Экотехнопарк «Горизонт»', 'Комплекс «Второй цикл»', 'Площадка «Северная»', 'Переработка «Минерал»', 'Сортировочный центр «Восток»', 'Комплекс «Ресурс»', 'Площадка «Южная»', 'Экоцентр «Контур»'];
+export const origins = ['ЖК «Речной квартал»', 'Реконструкция набережной', 'Метро «Янтарная»', 'Бизнес-парк «Орбита»', 'Развязка Южная', 'ЖК «Сосновый берег»', 'Школа в Новом районе', 'Демонтаж цеха № 4', 'Спорткомплекс «Волна»', 'Трамвайное депо', 'Парк «Зелёный мыс»', 'Технопарк «Спектр»'];
+export const receptions = ['Экотехнопарк «Горизонт»', 'Комплекс «Второй цикл»', 'Площадка «Северная»', 'Переработка «Минерал»', 'Сортировочный центр «Восток»', 'Комплекс «Ресурс»', 'Площадка «Южная»', 'Экоцентр «Контур»'];
 const wasteTypes = [{ code: '31400000000', name: 'Грунт' }, { code: '82200000000', name: 'Бетон и железобетон' }, { code: '83000000000', name: 'Кирпичный бой' }, { code: '82400000000', name: 'Асфальт' }, { code: '89000000000', name: 'Смешанные строительные отходы' }, { code: '30500000000', name: 'Древесина' }, { code: '46100000000', name: 'Металлолом' }, { code: '92000000000', name: 'Растительные отходы' }];
 const statuses = ['Завершен', 'Перевозка', 'Подача', 'На взвешивание', 'Разгрузка', 'Отменено'];
 let seed = 81273;
 const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
 const choose = (weights: number[]) => { let x = random() * weights.reduce((s, n) => s + n, 0); return weights.findIndex(n => (x -= n) < 0); };
-const rows: WasteTrip[] = [];
+export const rows: (WasteTrip & { distanceKm: number })[] = [];
 for (let d = 0; d < 28; d++) {
   const day = iso(Date.parse('2026-10-03') + d * DAY);
   const weekend = [0, 6].includes(new Date(day).getUTCDay());
@@ -26,7 +26,7 @@ for (let d = 0; d < 28; d++) {
     const origin = origins[choose([23, 19, 16, 13, 11, 9, 7, 6, 5, 4, 3, 2])];
     const reception = receptions[choose([30, 24, 18, 12, 8, 5, 2, 1])];
     const known = random() > 0.035;
-    rows.push({ tripNo: `ДЕМО-${240001 + rows.length}`, submittedAt: `${day}T${String(hour).padStart(2, '0')}:${String(Math.floor(random() * 60)).padStart(2, '0')}:00`, status,
+    rows.push({ distanceKm: Math.round((8 + random() * 64 + c * 1.4) * 10) / 10, tripNo: `ДЕМО-${240001 + rows.length}`, submittedAt: `${day}T${String(hour).padStart(2, '0')}:${String(Math.floor(random() * 60)).padStart(2, '0')}:00`, status,
       vehicle: `${['А', 'В', 'Е', 'К'][vehicleId % 4]}${100 + vehicleId}МР 777`, driver: `${['Александр', 'Михаил', 'Сергей', 'Дмитрий', 'Андрей', 'Илья'][vehicleId % 6]} ${['Волков', 'Орлов', 'Соколов', 'Морозов', 'Белов', 'Лебедев', 'Зайцев'][vehicleId % 7]} (демо)`,
       originObject: origin, originName: origin, destinationObject: reception, destinationName: reception, carrier: carriers[c], maxMass: 32, cargoMass: known ? mass : null, cargoMassRaw: known ? String(mass) : null, wasteCode: wasteTypes[w].code, wasteType: wasteTypes[w].name });
   }
