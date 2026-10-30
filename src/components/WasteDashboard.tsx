@@ -1,4 +1,8 @@
 "use client";
+import { AnalyticsKpi } from "./AnalyticsKpi";
+import { TrendCard } from "./TrendCard";
+import { AnalyticsRankingBars } from "./AnalyticsRankingBars";
+import { Delta, PanelHeading, useRingTooltip, PANEL, PANEL_HEADER } from "./DashboardPrimitives";
 import { OperationalOverview } from "./OperationalOverview";
 import { demoFetch as fetch } from "@/lib/demo";
 
@@ -11,7 +15,7 @@ import {
   Truck, Users, Warehouse, X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { asset } from "@/lib/bp";
 import { withK } from "@/lib/auth";
 import {
@@ -37,8 +41,6 @@ type View = "summary" | "structure" | "analytics" | "source";
 type Option = { value: string; label: string; detail?: string };
 
 const EMPTY_SELECTION: WasteSelection = { carriers: [], origins: [], wasteCodes: [] };
-const PANEL = "rounded-[8px] border-[#182235] bg-[#03060c] before:hidden";
-const PANEL_HEADER = "waste-panel-header";
 const FILTER = "waste-filter-control h-[52px] rounded-[12px] border border-white/[0.10] bg-[#0f1626] py-2.5 pl-4 pr-3 text-[18px] font-medium leading-6 text-[#e8e8e8] transition-colors";
 
 function capitalizeWaste(value: string) {
@@ -223,30 +225,9 @@ function FilterBar({ meta, period, selection, onPeriod, onSelection, hidden = []
   );
 }
 
-function Delta({ value }: { value: number | null }) {
-  if (value == null) return <span className="text-[#69758a]">—</span>;
-  const positive = value > 0;
-  const neutral = value === 0;
-  return <span className={neutral ? "text-[#8994a7]" : positive ? "text-[#43be6b]" : "text-[#df1741]"}>{positive ? "+" : ""}{value.toFixed(1).replace(".", ",")}%</span>;
-}
-
 function relativeChange(value: number, previous: number) {
   if (previous === 0) return value === 0 ? 0 : null;
   return ((value - previous) / previous) * 100;
-}
-
-function PanelHeading({ title, subtitle, updated, tip }: { title: string; subtitle?: string; updated: string; tip: string }) {
-  const longTitle = title.length > 24;
-  return (
-    <div className="waste-panel-heading min-w-0">
-      <div className="flex min-w-0 items-center gap-2">
-        <span className={`waste-panel-heading__title truncate ${longTitle ? "waste-panel-heading__title--long" : ""}`}>{title}</span>
-        {subtitle && <span className="waste-panel-heading__subtitle hidden shrink-0 3xl:inline">({subtitle})</span>}
-        <InfoTip label={title} text={tip} />
-      </div>
-      {updated && <div className="waste-panel-heading__updated"><span aria-hidden="true" />Обновлено {updated}</div>}
-    </div>
-  );
 }
 
 function LoadingPanel({ className = "" }: { className?: string }) {
@@ -258,7 +239,6 @@ const RING_STROKE = 15;
 const RING_OUTER_RADIUS = RING_RADIUS + RING_STROKE / 2;
 const RING_INNER_RADIUS = RING_RADIUS - RING_STROKE / 2;
 const RING_CORNER_RADIUS = RING_STROKE / 4;
-type RingHover = { index: number; x: number; y: number; cursorX: number; cursorY: number };
 
 function ringSegmentGeometry(sharePct: number, offset: number, hasValue: boolean) {
   const gap = sharePct >= 8 ? 1.15 : sharePct >= 3 ? 0.85 : Math.min(0.55, sharePct * 0.28);
@@ -311,71 +291,6 @@ function ringSegmentPath(offsetPct: number, visiblePct: number) {
     `Q ${startOuterControl.x.toFixed(3)} ${startOuterControl.y.toFixed(3)} ${outerStart.x.toFixed(3)} ${outerStart.y.toFixed(3)}`,
     "Z",
   ].join(" ");
-}
-
-function useRingTooltip() {
-  const frameRef = useRef<HTMLDivElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
-  const [hovered, setHovered] = useState<RingHover | null>(null);
-
-  const placeTooltip = useCallback((index: number, clientX: number, clientY: number) => {
-    const frame = frameRef.current;
-    if (!frame) return;
-    const bounds = frame.getBoundingClientRect();
-    const scaleX = bounds.width / Math.max(frame.offsetWidth, 1);
-    const scaleY = bounds.height / Math.max(frame.offsetHeight, 1);
-    const cursorX = (clientX - bounds.left) / scaleX;
-    const cursorY = (clientY - bounds.top) / scaleY;
-    const width = tooltipRef.current?.offsetWidth ?? Math.min(300, frame.offsetWidth - 24);
-    const height = tooltipRef.current?.offsetHeight ?? 136;
-    const inset = 12;
-    const gap = 14;
-    let x = cursorX + gap;
-    let y = cursorY - height - gap;
-
-    if (x + width > frame.offsetWidth - inset) x = cursorX - width - gap;
-    if (y < inset) y = cursorY + gap;
-    if (y + height > frame.offsetHeight - inset) y = cursorY - height - gap;
-
-    setHovered({
-      index,
-      cursorX,
-      cursorY,
-      x: Math.max(inset, Math.min(x, Math.max(inset, frame.offsetWidth - width - inset))),
-      y: Math.max(inset, Math.min(y, Math.max(inset, frame.offsetHeight - height - inset))),
-    });
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!hovered || !tooltipRef.current || !frameRef.current) return;
-    const frame = frameRef.current;
-    const tooltip = tooltipRef.current;
-    const inset = 12;
-    const gap = 14;
-    const width = tooltip.offsetWidth;
-    const height = tooltip.offsetHeight;
-    let x = hovered.cursorX + gap;
-    let y = hovered.cursorY - height - gap;
-
-    if (x + width > frame.offsetWidth - inset) x = hovered.cursorX - width - gap;
-    if (y < inset) y = hovered.cursorY + gap;
-    if (y + height > frame.offsetHeight - inset) y = hovered.cursorY - height - gap;
-
-    const next = {
-      ...hovered,
-      x: Math.max(inset, Math.min(x, Math.max(inset, frame.offsetWidth - width - inset))),
-      y: Math.max(inset, Math.min(y, Math.max(inset, frame.offsetHeight - height - inset))),
-    };
-    if (Math.abs(next.x - hovered.x) > 0.5 || Math.abs(next.y - hovered.y) > 0.5) setHovered(next);
-  }, [hovered]);
-
-  return {
-    frameRef,
-    tooltipRef,
-    hovered,
-    moveTooltip: placeTooltip,
-    clearTooltip: () => setHovered(null),
-  };
 }
 
 function WasteBars({ rows, colors, total, onOpen, totalPosition = "bottom" }: {
@@ -738,264 +653,6 @@ function InfrastructurePanel({ data, totals, updated }: { data: WasteDashboardDa
   );
 }
 
-function formatTrendAxisLabel(bucket: string | undefined, gran: Gran) {
-  if (!bucket) return "";
-  const date = bucket.slice(0, 10);
-  const [, month, day] = date.split("-");
-  if (gran === "day") return `${day}.${month}`;
-  const hour = bucket.slice(11, 13);
-  return `${hour}:00`;
-}
-
-function formatTrendTooltipTitle(bucket: string, gran: Gran) {
-  const [, month, day] = bucket.slice(0, 10).split("-");
-  return gran === "hour" ? `${day}.${month}.${bucket.slice(0, 4)} · ${bucket.slice(11, 16)}` : `${day}.${month}.${bucket.slice(0, 4)}`;
-}
-
-function maxOrOne(points: Array<{ value: number | null }>) {
-  return Math.max(1, ...points.map((point) => point.value ?? 0));
-}
-
-type TrendGeometry = {
-  left: number;
-  width: number;
-  top: number;
-  height: number;
-  minY: number;
-  maxY: number;
-};
-
-type ApexChartContext = {
-  w?: {
-    globals?: {
-      translateX?: number;
-      gridWidth?: number;
-      translateY?: number;
-      gridHeight?: number;
-      minY?: number[];
-      maxY?: number[];
-      yAxisScale?: Array<{
-        niceMin?: number;
-        niceMax?: number;
-        result?: number[];
-      }>;
-    };
-  };
-};
-
-function areaOptions(
-  points: Array<{ bucket: string; value: number | null }>,
-  gran: Gran,
-  color: string,
-  unit: string,
-  sparse = false,
-  onGeometry?: (context?: ApexChartContext) => void,
-): ApexOptions {
-  const values = points.map((point) => point.value);
-  const max = Math.max(0, ...values.filter((value): value is number => value != null));
-  const dayCount = new Set(points.map((point) => point.bucket.slice(0, 10))).size;
-  return {
-    chart: {
-      type: sparse ? "scatter" : "area",
-      toolbar: { show: false },
-      zoom: { enabled: false },
-      background: "transparent",
-      fontFamily: "inherit",
-      parentHeightOffset: 0,
-      animations: { enabled: true, easing: "easeinout", speed: 700, animateGradually: { enabled: true, delay: 100 }, dynamicAnimation: { enabled: true, speed: 350 } },
-      events: {
-        mounted: (context) => onGeometry?.(context as ApexChartContext),
-        updated: (context) => onGeometry?.(context as ApexChartContext),
-      },
-    },
-    theme: { mode: "dark" }, colors: [color],
-    stroke: { curve: "smooth", width: 2.5 },
-    markers: { size: sparse ? 8 : 0, colors: [color], strokeColors: "#03060c", strokeWidth: sparse ? 3 : 0, hover: { size: sparse ? 10 : 0 } },
-    fill: { type: "gradient", gradient: { shade: "dark", type: "vertical", shadeIntensity: 0.35, opacityFrom: 0.42, opacityTo: 0.03, stops: [0, 88, 100] } },
-    dataLabels: { enabled: gran === "day" && points.length <= 14, offsetY: -10, formatter: (value: number) => value == null ? "" : formatNumber(value, unit === "т" ? 1 : 0), style: { fontSize: "18px", fontWeight: 600, colors: [color] }, background: { enabled: false } },
-    grid: { borderColor: "rgba(255,255,255,0.07)", strokeDashArray: 2, padding: { left: 14, right: 36, top: 18, bottom: -6 } },
-    xaxis: {
-      type: "category",
-      categories: points.map((point) => point.bucket),
-      tickPlacement: "on",
-      tickAmount: Math.max(1, Math.min(gran === "hour" ? dayCount * 4 : 6, points.length - 1)),
-      labels: {
-        rotate: 0,
-        hideOverlappingLabels: true,
-        trim: false,
-        formatter: (value: string) => formatTrendAxisLabel(value, gran),
-        style: { colors: "#8b94a4", fontSize: gran === "hour" ? "14px" : "17px" },
-      },
-      axisBorder: { show: true, color: "rgba(255,255,255,0.12)" },
-      axisTicks: { show: false },
-      tooltip: { enabled: false },
-    },
-    yaxis: { min: 0, max: max > 0 ? undefined : 1, tickAmount: 4, labels: { formatter: (value: number) => formatNumber(value, 0), style: { colors: "#8b94a4", fontSize: "17px" } } },
-    // FitCanvas масштабирует весь экран через transform. Нативный hit-test ApexCharts
-    // использует немасштабированную ширину SVG, поэтому вправо накапливается ошибка.
-    // Ховер строится в TrendCard по фактическому DOMRect области графика.
-    tooltip: { enabled: false },
-    legend: { show: false }, noData: { text: "Нет данных", style: { color: "#7f899b" } },
-    responsive: [{ breakpoint: 1024, options: { dataLabels: { enabled: false }, xaxis: { labels: { rotate: 0, rotateAlways: false, style: { fontSize: "12px" } } }, yaxis: { min: 0, tickAmount: 4, labels: { formatter: (value: number) => formatNumber(value, 0), style: { fontSize: "14px" } } } } }],
-  };
-}
-
-function TrendCard({ title, subtitle, tip, updated, points, gran, onGran, color, unit }: {
-  title: string; subtitle: string; tip: string; updated: string;
-  points: Array<{ bucket: string; value: number | null }>; gran: Gran; onGran: (gran: Gran) => void; color: string; unit: string;
-}) {
-  const chartRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [geometry, setGeometry] = useState<TrendGeometry | null>(null);
-  const [hovered, setHovered] = useState<{ index: number; cursorX: number; cursorY: number } | null>(null);
-  const knownPointCount = points.filter((point) => point.value != null).length;
-  const sparse = knownPointCount === 1;
-  const dayCount = useMemo(() => new Set(points.map((point) => point.bucket.slice(0, 10))).size, [points]);
-  const daySeparators = useMemo(() => gran === "hour"
-    ? points.flatMap((point, index) => {
-      if (index === 0 || point.bucket.slice(0, 10) === points[index - 1]?.bucket.slice(0, 10)) return [];
-      const [, month, day] = point.bucket.slice(0, 10).split("-");
-      return [{ index, label: `${day}.${month}` }];
-    })
-    : [], [gran, points]);
-  const isScrollable = gran === "hour" && dayCount > 3;
-  const chartWidthPercent = isScrollable ? dayCount / 3 * 100 : 100;
-  const syncGeometry = useCallback((context?: ApexChartContext) => {
-    const globals = context?.w?.globals;
-    if (!globals) return;
-    const axis = globals.yAxisScale?.[0];
-    const ticks = axis?.result?.filter((value) => Number.isFinite(value)) ?? [];
-    const next: TrendGeometry = {
-      left: globals.translateX ?? 0,
-      width: globals.gridWidth ?? 0,
-      top: globals.translateY ?? 0,
-      height: globals.gridHeight ?? 0,
-      minY: axis?.niceMin ?? (ticks.length ? Math.min(...ticks) : globals.minY?.[0] ?? 0),
-      maxY: axis?.niceMax ?? (ticks.length ? Math.max(...ticks) : globals.maxY?.[0] ?? maxOrOne(points)),
-    };
-    setGeometry((current) => current && Object.keys(next).every((key) => current[key as keyof TrendGeometry] === next[key as keyof TrendGeometry]) ? current : next);
-  }, [points]);
-  const options = useMemo(() => areaOptions(points, gran, color, unit, sparse, syncGeometry), [points, gran, color, unit, sparse, syncGeometry]);
-  const seriesData = useMemo(() => points.map((point) => point.value), [points]);
-
-  useLayoutEffect(() => {
-    const viewport = scrollRef.current;
-    if (!viewport || !isScrollable) return;
-    const frame = requestAnimationFrame(() => {
-      viewport.scrollLeft = viewport.scrollWidth - viewport.clientWidth;
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [isScrollable, points]);
-
-  useEffect(() => {
-    const chart = chartRef.current;
-    if (!chart) return;
-    const onMove = (event: PointerEvent) => {
-      const grid = chart.querySelector<SVGGElement>(".apexcharts-grid");
-      if (!grid || points.length === 0) return;
-      const gridBounds = grid.getBoundingClientRect();
-      const chartBounds = chart.getBoundingClientRect();
-      if (event.clientY < gridBounds.top - 20 || event.clientY > gridBounds.bottom + 8) {
-        setHovered(null);
-        return;
-      }
-      const fraction = (event.clientX - gridBounds.left) / Math.max(gridBounds.width, 1);
-      if (fraction < -0.015 || fraction > 1.015) {
-        setHovered(null);
-        return;
-      }
-      const index = points.length === 1 ? 0 : Math.round(Math.max(0, Math.min(1, fraction)) * (points.length - 1));
-      const scaleX = chartBounds.width / Math.max(chart.offsetWidth, 1);
-      const scaleY = chartBounds.height / Math.max(chart.offsetHeight, 1);
-      setHovered({
-        index,
-        cursorX: (event.clientX - chartBounds.left) / Math.max(scaleX, 0.0001),
-        cursorY: (event.clientY - chartBounds.top) / Math.max(scaleY, 0.0001),
-      });
-    };
-    const onLeave = () => setHovered(null);
-    chart.addEventListener("pointermove", onMove);
-    chart.addEventListener("pointerleave", onLeave);
-    return () => {
-      chart.removeEventListener("pointermove", onMove);
-      chart.removeEventListener("pointerleave", onLeave);
-    };
-  }, [points]);
-
-  const hoverPoint = hovered ? points[hovered.index] : null;
-  const pointX = geometry && hovered && points.length > 1
-    ? geometry.left + (hovered.index / (points.length - 1)) * geometry.width
-    : geometry?.left ?? 0;
-  const pointY = geometry && hoverPoint?.value != null
-    ? geometry.top + (1 - (hoverPoint.value - geometry.minY) / Math.max(geometry.maxY - geometry.minY, 1)) * geometry.height
-    : geometry?.top ?? 0;
-  const tooltipWidth = Math.min(224, Math.max(180, (chartRef.current?.offsetWidth ?? 248) - 24));
-  const tooltipHeight = 82;
-  const chartWidth = chartRef.current?.offsetWidth ?? 248;
-  const chartHeight = chartRef.current?.offsetHeight ?? 160;
-  const visibleLeft = scrollRef.current?.scrollLeft ?? 0;
-  const visibleRight = visibleLeft + (scrollRef.current?.clientWidth ?? chartWidth);
-  const tooltipGap = 18;
-  const tooltipX = pointX + tooltipGap + tooltipWidth <= visibleRight - 12
-    ? pointX + tooltipGap
-    : Math.max(visibleLeft + 12, pointX - tooltipWidth - tooltipGap);
-  const tooltipY = pointY - tooltipHeight - tooltipGap >= 12
-    ? pointY - tooltipHeight - tooltipGap
-    : Math.min(chartHeight - tooltipHeight - 12, pointY + tooltipGap);
-  return (
-    <Panel className={`${PANEL} waste-dashboard-panel h-full min-h-[350px] lg:min-h-0`} headerClassName={PANEL_HEADER} bodyClassName="waste-panel-body flex min-h-0 flex-1 flex-col pb-4 pt-0" title={<PanelHeading title={title} subtitle={subtitle} updated={updated} tip={tip} />} right={<GranControl gran={gran} onGran={onGran} />}>
-      <div
-        ref={scrollRef}
-        className={`waste-trend-scroll ${isScrollable ? "waste-trend-scroll--hourly" : ""}`}
-        data-visible-days={Math.min(3, dayCount)}
-        data-total-days={dayCount}
-        onScroll={() => setHovered(null)}
-        aria-label={isScrollable ? `График: показано 3 из ${dayCount} дней, доступна горизонтальная прокрутка` : undefined}
-      >
-        <div ref={chartRef} className="waste-trend-chart relative flex min-h-0" style={{ width: `${chartWidthPercent}%` }}>
-          <ChartBox key={`${title}-${gran}-${points.length}-${sparse ? "sparse" : "continuous"}`} type={sparse ? "scatter" : "area"} options={options} series={[{ name: title, data: seriesData }]} />
-          {geometry && daySeparators.map((separator) => {
-            const separatorX = geometry.left + (separator.index / Math.max(points.length - 1, 1)) * geometry.width;
-            return (
-              <div
-                key={`${title}-${separator.index}`}
-                className="waste-trend-day-separator"
-                style={{ left: separatorX, top: geometry.top, height: geometry.height }}
-              >
-                <span>{separator.label}</span>
-              </div>
-            );
-          })}
-          {geometry && hovered && hoverPoint?.value != null && (
-            <>
-              <div className="pointer-events-none absolute z-10 border-l border-dashed border-white/55" style={{ left: pointX, top: geometry.top, height: geometry.height }} />
-              <div className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#03060c] shadow-[0_0_0_2px_rgba(255,255,255,0.12)]" style={{ left: pointX, top: pointY, width: 14, height: 14, background: color }} />
-              <div className="waste-trend-tooltip" style={{ left: tooltipX, top: tooltipY, width: tooltipWidth }}>
-                <div className="waste-chart-tooltip waste-chart-tooltip--compact">
-                  <div className="waste-chart-tooltip__heading">
-                    <span className="waste-chart-tooltip__dot" style={{ background: color }} />
-                    <span className="waste-chart-tooltip__title">{formatTrendTooltipTitle(hoverPoint.bucket, gran)}</span>
-                  </div>
-                  <div className="waste-chart-tooltip__metrics">
-                    <strong>{formatNumber(hoverPoint.value, unit === "т" ? 2 : 0)} {unit}</strong>
-                    <span>{gran === "hour" ? "часовой интервал" : "за календарный день"}</span>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-      {sparse && (
-        <div className="mt-1 flex shrink-0 items-center gap-2 text-[14px] leading-5 text-[#7f899b]">
-          <CircleAlert className="size-3.5 shrink-0" />
-          <span>Валидная масса есть только в 1 из {points.length} интервалов</span>
-        </div>
-      )}
-    </Panel>
-  );
-}
-
 const ANALYTICS_COLORS = ["#2878e8", "#43be6b", "#a55de8"];
 const ANALYTICS_HEAT_COLORS = ["#102a4c", "#17518a", "#1e75a4", "#2998a4", "#43aa83", "#8bb55d", "#c5ad4b", "#df7948", "#cf4558"];
 
@@ -1027,129 +684,6 @@ function toTripTrendPoints(rows: Array<{ bucket: string; value: number }> = []):
   return [...days.entries()].map(([label, value]) => ({ label, value }));
 }
 
-function smoothSparkPath(points: Array<{ x: number; y: number }>) {
-  if (!points.length) return "";
-  return points.slice(1).reduce((path, point, index) => {
-    const previous = points[index];
-    const middle = (previous.x + point.x) / 2;
-    return `${path} C${middle} ${previous.y}, ${middle} ${point.y}, ${point.x} ${point.y}`;
-  }, `M${points[0].x} ${points[0].y}`);
-}
-
-function formatAnalyticsTrendLabel(value: string) {
-  const date = value.slice(0, 10);
-  const [year, month, day] = date.split("-");
-  const hour = value.includes("T") ? value.slice(11, 13) : "";
-  return hour ? `${day}.${month}.${year} · ${hour}:00` : `${day}.${month}.${year}`;
-}
-
-function AnalyticsKpi({ title, metric, icon: Icon, color, unit = "%", tip, periodLabel = "vs предыдущий период", trend = [] }: {
-  title: string; metric: NullableMetric; icon: LucideIcon; color: string; unit?: string; tip: string; periodLabel?: string; trend?: AnalyticsTrendPoint[];
-}) {
-  const gradientId = `analytics-area-${useId().replaceAll(":", "")}`;
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const absolute = metric.value == null || metric.previous == null ? null : metric.value - metric.previous;
-  const positive = (metric.changePct ?? absolute ?? 0) > 0;
-  const negative = (metric.changePct ?? absolute ?? 0) < 0;
-  const deltaClass = positive ? "is-positive" : negative ? "is-negative" : "is-neutral";
-  const absoluteUnit = unit === "%" ? " п.п." : unit;
-  const validTrend = trend.filter((point): point is { label: string; value: number } => point.value != null && Number.isFinite(point.value));
-  const sourcePoints = validTrend.length
-    ? validTrend
-    : metric.value == null
-      ? []
-      : [{ label: "", value: metric.value }];
-  const values = sourcePoints.map((point) => point.value);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = Math.max(max - min, Math.abs(max) * 0.04, 1);
-  const points = sourcePoints.map((point, index) => ({
-    ...point,
-    x: sourcePoints.length > 1 ? 2 + index / (sourcePoints.length - 1) * 96 : 50,
-    y: max === min ? 16 : 24 - (point.value - min) / range * 18,
-  }));
-  const linePath = points.length > 1 ? smoothSparkPath(points) : "";
-  const firstPoint = points[0];
-  const lastPoint = points[points.length - 1];
-  const areaPath = firstPoint && lastPoint && linePath
-    ? `${linePath} L${lastPoint.x} 28 L${firstPoint.x} 28 Z`
-    : "";
-  const hovered = hoveredIndex == null ? null : points[hoveredIndex];
-  const displayUnit = unit.trim();
-  return (
-    <Panel className={`${PANEL} waste-analytics-kpi`} bodyClassName="waste-analytics-kpi__body">
-      <div className="waste-analytics-kpi__main">
-        <div className="waste-analytics-kpi__icon" style={{ color, borderColor: `${color}70`, background: `${color}12` }}>
-          <Icon className="size-[22px]" strokeWidth={1.7} />
-        </div>
-        <div className="waste-analytics-kpi__content min-w-0 flex-1">
-          <div className="waste-analytics-kpi__heading">
-            <span className="waste-analytics-kpi__label">{title}</span>
-            <InfoTip label={title} text={tip} />
-          </div>
-          <div className="waste-analytics-kpi__metric-row">
-            <div className="waste-analytics-kpi__value">{formatNumber(metric.value, 1)}{metric.value != null && <span>{unit}</span>}</div>
-            <div className="waste-analytics-kpi__comparison">
-              <div className={`waste-analytics-kpi__delta ${deltaClass}`}>
-                <strong>{absolute == null ? "—" : `${absolute > 0 ? "+" : ""}${formatNumber(absolute, 1)}${absoluteUnit}`}</strong>
-                <Delta value={metric.changePct} />
-              </div>
-              <div className="waste-analytics-kpi__period">{periodLabel}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {points.length > 1 ? (
-        <div
-          className="waste-analytics-kpi__spark-wrap"
-          data-testid={`analytics-chart-${title}`}
-          onPointerMove={(event) => {
-            const bounds = event.currentTarget.getBoundingClientRect();
-            const fraction = Math.max(0, Math.min(1, (event.clientX - bounds.left) / Math.max(bounds.width, 1)));
-            setHoveredIndex(points.length === 1 ? 0 : Math.round(fraction * (points.length - 1)));
-          }}
-          onPointerLeave={() => setHoveredIndex(null)}
-        >
-          <svg
-            className="waste-analytics-kpi__spark"
-            viewBox="0 0 100 28"
-            preserveAspectRatio="none"
-            role="img"
-            aria-label={`${title}: динамика по ${points.length} дням`}
-          >
-            <defs>
-              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity=".28" />
-                <stop offset="58%" stopColor={color} stopOpacity=".13" />
-                <stop offset="100%" stopColor={color} stopOpacity=".015" />
-              </linearGradient>
-            </defs>
-            <path className="waste-analytics-kpi__spark-grid" d="M1 7.5H99 M1 16H99 M1 24.5H99" />
-            <path className="waste-analytics-kpi__spark-area" d={areaPath} fill={`url(#${gradientId})`} />
-            <path className="waste-analytics-kpi__spark-line" d={linePath} fill="none" stroke={color} style={{ color }} />
-            {hovered && <line className="waste-analytics-kpi__spark-crosshair" x1={hovered.x} x2={hovered.x} y1="2" y2="27" />}
-          </svg>
-          {hovered && (
-            <div
-              className="waste-analytics-kpi__chart-tooltip"
-              style={hovered.x < 28
-                ? { left: 8, transform: "none" }
-                : hovered.x > 72
-                  ? { right: 8, left: "auto", transform: "none" }
-                  : { left: `${hovered.x}%` }}
-            >
-              <span>{hovered.label ? formatAnalyticsTrendLabel(hovered.label) : title}</span>
-              <strong>{formatNumber(hovered.value, displayUnit === "т" ? 2 : 1)}{displayUnit ? ` ${displayUnit}` : ""}</strong>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="waste-analytics-kpi__spark-empty">Недостаточно данных по дням</div>
-      )}
-    </Panel>
-  );
-}
-
 type AnalyticsRankingKind = "carriers" | "origins" | "receptions";
 
 const ANALYTICS_RANKING_META: Record<AnalyticsRankingKind, { title: string; tip: string }> = {
@@ -1162,53 +696,6 @@ function selectionForRanking(kind: AnalyticsRankingKind, selection: WasteSelecti
   if (kind === "carriers") return { ...selection, carriers: [] };
   if (kind === "origins") return { ...selection, origins: [] };
   return selection;
-}
-
-function AnalyticsRankingBars({ rows, color, total, onOpen, totalPosition = "bottom" }: {
-  rows: AnalyticsRankingRow[];
-  color: string;
-  total: number;
-  onOpen?: () => void;
-  totalPosition?: "top" | "bottom";
-}) {
-  const { frameRef, tooltipRef, hovered, moveTooltip, clearTooltip } = useRingTooltip();
-  const max = Math.max(1, ...rows.map((row) => row.trips));
-  const totalTrips = Math.max(1, total);
-  return (
-    <div ref={frameRef} className="waste-ranking-frame waste-ranking-frame--analytics" role="img" aria-label={`Рейтинг по количеству рейсов, всего ${formatNumber(total)}`}>
-      {totalPosition === "top" && <div className="waste-ranking-total waste-ranking-total--top"><span>Итого</span><strong>{formatNumber(total)}</strong><span>100%</span></div>}
-      <div className="waste-ranking-list">
-        {rows.map((row, index) => {
-          const share = row.trips / totalTrips * 100;
-          return (
-            <div
-              className="waste-ranking-row w-full text-left"
-              key={row.name}
-              onClick={onOpen}
-              onPointerMove={(event) => moveTooltip(index, event.clientX, event.clientY)}
-              onPointerLeave={clearTooltip}
-            >
-              <span className="waste-ranking-index">{index + 1}</span>
-              <span className="waste-ranking-name" title={row.name}><Dot className="size-2.5 shrink-0" style={{ background: color }} /><span>{row.name}</span></span>
-              <span className="waste-ranking-track" aria-hidden="true"><span className="waste-ranking-fill" style={{ width: `${row.trips / max * 100}%`, background: color, animationDelay: `${Math.min(index, 8) * 30}ms` }} /></span>
-              <strong className="waste-ranking-value">{formatNumber(row.trips)}</strong>
-              <span className="waste-ranking-share">{formatNumber(share, 1)}%</span>
-            </div>
-          );
-        })}
-      </div>
-      {!rows.length && <div className="flex min-h-[150px] items-center justify-center text-[15px] text-[#737e91]">Нет данных</div>}
-      {totalPosition === "bottom" && <div className="waste-ranking-total"><span>Итого</span><strong>{formatNumber(total)}</strong><span>100%</span></div>}
-      {hovered && rows[hovered.index] && (
-        <div ref={tooltipRef} className="waste-ring-tooltip waste-ranking-tooltip" style={{ left: hovered.x, top: hovered.y }}>
-          <div className="waste-chart-tooltip">
-            <div className="waste-chart-tooltip__heading"><span className="waste-chart-tooltip__dot" style={{ background: color }} /><span className="waste-chart-tooltip__title">{rows[hovered.index].name}</span></div>
-            <div className="waste-chart-tooltip__metrics"><strong>{formatNumber(rows[hovered.index].trips)} рейсов</strong><span>{formatNumber(rows[hovered.index].trips / totalTrips * 100, 1)}% от общего количества</span></div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 function AnalyticsRanking({ kind, rows, color, total, updated, onOpen }: {
